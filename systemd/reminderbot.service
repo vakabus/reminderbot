@@ -6,8 +6,7 @@ After=network.target
 Type=oneshot
 User=reminderbot
 WorkingDirectory=/home/reminderbot
-ExecStart=/usr/bin/java reminderbot.jar
-Restart=never
+ExecStart=/usr/bin/java -jar reminderbot-all.jar
 
 [Install]
 WantedBy=multi-user.target

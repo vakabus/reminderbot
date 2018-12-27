@@ -88,9 +88,9 @@ public class Emails {
         Parser nattyParser = new Parser(TimeZone.getDefault());
         List<Date> dateList = receivedEmail.messages()
                 .stream()
-                .map(emailMessage -> emailMessage.getContent().strip())
+                .map(emailMessage -> emailMessage.getContent().trim())
                 .filter(s -> !s.isEmpty())
-                .map(s -> s.split("\n")[0].strip())
+                .map(s -> s.split("\n")[0].trim())
                 .map(txt -> Jsoup.clean(txt, Whitelist.none()))
                 .map(s -> nattyParser.parse(s, receivedEmail.sentDate()))
                 .flatMap(Collection::stream)

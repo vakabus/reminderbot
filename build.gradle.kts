@@ -7,6 +7,8 @@
  */
 
 plugins {
+    id("com.github.johnrengelman.shadow") version "4.0.3"
+
     // Apply the java plugin to add support for Java
     java
 
