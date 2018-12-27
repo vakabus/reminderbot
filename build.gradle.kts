@@ -26,7 +26,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.5")
     implementation("org.jodd:jodd-mail:5.0.6")
     implementation("org.jsoup:jsoup:1.11.3")
-    implementation("com.joestelmach:natty:0.11")
+    implementation("com.joestelmach:natty:0.13")
 
     // Use JUnit test framework
     testImplementation("junit:junit:4.12")

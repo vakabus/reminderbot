@@ -1,0 +1,13 @@
+[Unit]
+Description=ReminderBot service
+After=network.target
+
+[Service]
+Type=oneshot
+User=reminderbot
+WorkingDirectory=/home/reminderbot
+ExecStart=/usr/bin/java reminderbot.jar
+Restart=never
+
+[Install]
+WantedBy=multi-user.target

@@ -20,6 +20,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -84,18 +85,18 @@ public class Emails {
     }
 
     public static Optional<Instant> extractTime(ReceivedEmail receivedEmail) {
-        Parser nattyParser = new Parser();
+        Parser nattyParser = new Parser(TimeZone.getDefault());
         List<Date> dateList = receivedEmail.messages()
                 .stream()
-                .map(emailMessage -> Jsoup.clean(emailMessage.getContent(), Whitelist.none()))
-                .map(nattyParser::parse)
-                .filter(dateGroups -> dateGroups.size() == 1)
-                .map(dateGroups -> dateGroups.get(0))
-                .filter(dateGroup -> dateGroup.isDateInferred() && dateGroup.isTimeInferred() && !dateGroup.isRecurring())
+                .map(emailMessage -> emailMessage.getContent().strip())
+                .filter(s -> !s.isEmpty())
+                .map(s -> s.split("\n")[0].strip())
+                .map(txt -> Jsoup.clean(txt, Whitelist.none()))
+                .map(s -> nattyParser.parse(s, receivedEmail.sentDate()))
+                .flatMap(Collection::stream)
+                .filter(dateGroup -> (dateGroup.isDateInferred() || dateGroup.isTimeInferred()) && !dateGroup.isRecurring())
                 .filter(dateGroup -> dateGroup.getText().equals(dateGroup.getFullText()))
-                .map(DateGroup::getDates)
-                .filter(dates -> dates.size() == 1)
-                .map(dates -> dates.get(0))
+                .flatMap(dateGroup -> dateGroup.getDates().stream())
                 .collect(Collectors.toList());
 
         if (dateList.size() == 1) {
@@ -126,7 +127,10 @@ public class Emails {
                 .from(config.getEmailDisplayName(), config.getEmailAddress())
                 .currentSentDate()
                 .subject(receivedEmail.subject(), receivedEmail.subjectEncoding())
-                .textMessage("I should have reminded you about this subject...");
+                .header("In-Reply-To", receivedEmail.messageId())
+                .header("References", receivedEmail.header("References") + "\r\n " + receivedEmail.messageId())
+                .textMessage("I should have reminded you about this...")
+                .message(receivedEmail.messages());
 
         return email;
     }
@@ -140,6 +144,8 @@ public class Emails {
                 .from(config.getEmailDisplayName(), config.getEmailAddress())
                 .currentSentDate()
                 .subject(receivedEmail.subject(), receivedEmail.subjectEncoding())
+                .header("In-Reply-To", receivedEmail.messageId())
+                .header("References", receivedEmail.header("References") + "\r\n " + receivedEmail.messageId())
                 .textMessage("Sorry, the datetime you specified could not be parsed fully... The reminder is NOT set.")
                 .message(receivedEmail.messages());
 
