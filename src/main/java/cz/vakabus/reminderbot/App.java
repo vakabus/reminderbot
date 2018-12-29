@@ -37,7 +37,7 @@ public class App {
         startupTime = Instant.now();
 
         var messageStore = MessageStore.load("messages.json");
-        var emails = Emails.downloadNewUnreadMessages(messageStore.getLastSuccessfulRun());
+        var emails = Emails.downloadUnreadMessages();
 
 
         // Fetch unread emails and filter those, which we will have to work with now

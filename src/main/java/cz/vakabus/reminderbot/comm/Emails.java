@@ -27,8 +27,21 @@ import java.util.stream.Collectors;
 
 public class Emails {
     public static final Logger LOGGER = Logger.getLogger(Emails.class.getName());
+    public static final String ERROR_MSG =
+            "Hi,\n" +
+                    "\n" +
+                    "I did NOT understand, what you sent me. Sorry. What I expect you to do is write\n" +
+                    "me an email in a way I can understand. Specifically, that means, the first line\n" +
+                    "will contain time specification. If I can't parse that, I bounce the email the\n" +
+                    "same way, I did now. You can try my parsing abilities here:\n" +
+                    "\n" +
+                    "http://natty.joestelmach.com/try.jsp\n" +
+                    "\n" +
+                    "Hope I made it clear. Happy to serve you,\n" +
+                    "Your ReminderBot\n" +
+                    "      More about me at [https://github.com/vakabus/reminderbot]";
 
-    public static List<ReceivedEmail> downloadNewUnreadMessages(Instant newerThan) {
+    public static List<ReceivedEmail> downloadUnreadMessages() {
         LOGGER.info("Fetching emails...");
 
         var session = createImapServer().createSession();
@@ -37,7 +50,6 @@ public class Emails {
         var emails = session
                 .receive()
                 .filter(EmailFilter.filter()
-                        //.sentDate(EmailFilter.Operator.GE, newerThan.toEpochMilli())
                         .flag(Flags.Flag.SEEN, false)
                 )
                 .unmark(Flags.Flag.SEEN)
@@ -63,15 +75,12 @@ public class Emails {
     private static ImapServer createImapServer() {
         Configuration config = Configuration.getInstance();
 
-
-        var server = ImapServer.create()
+        return ImapServer.create()
                 .auth(config.getImapUsername(), config.getImapPassword())
                 .host(config.getImapServerHostname())
                 .ssl(config.isImapSSL())
                 .port(config.getImapServerPort())
                 .buildImapMailServer();
-
-        return server;
     }
 
     public static String serializeEmail(ReceivedEmail email) {
@@ -122,34 +131,30 @@ public class Emails {
     public static Email createReminderEmail(ReceivedEmail receivedEmail) {
         Configuration config = Configuration.getInstance();
 
-        var email = Email.create()
+        return Email.create()
                 .to(receivedEmail.replyTo())
                 .from(config.getEmailDisplayName(), config.getEmailAddress())
                 .currentSentDate()
                 .subject(receivedEmail.subject(), receivedEmail.subjectEncoding())
                 .header("In-Reply-To", receivedEmail.messageId())
                 .header("References", receivedEmail.header("References") + "\r\n " + receivedEmail.messageId())
-                .textMessage("I should have reminded you about this...")
+                .textMessage("I should have reminded you about this...\n\nYour ReminderBot")
                 .message(receivedEmail.messages());
-
-        return email;
     }
 
 
     public static Email createParsingErrorEmail(ReceivedEmail receivedEmail) {
         Configuration config = Configuration.getInstance();
 
-        var email = Email.create()
+        return Email.create()
                 .to(receivedEmail.replyTo())
                 .from(config.getEmailDisplayName(), config.getEmailAddress())
                 .currentSentDate()
                 .subject(receivedEmail.subject(), receivedEmail.subjectEncoding())
                 .header("In-Reply-To", receivedEmail.messageId())
                 .header("References", receivedEmail.header("References") + "\r\n " + receivedEmail.messageId())
-                .textMessage("Sorry, the datetime you specified could not be parsed fully... The reminder is NOT set.")
+                .textMessage(ERROR_MSG)
                 .message(receivedEmail.messages());
-
-        return email;
     }
 
     public static void sendEmails(List<Email> emails) {
