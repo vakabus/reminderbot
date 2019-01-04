@@ -44,18 +44,18 @@ public class App {
         LOGGER.info("" + messageStore.getMessages().size() + " stored messages is in the system...");
         var emailsToProcessNow = emails.stream()
                 .map(receivedEmail -> new AbstractMap.SimpleEntry<>(receivedEmail, Emails.extractTime(receivedEmail)))
-                .filter(entry -> !entry.getValue().isPresent() || entry.getValue().get().isBefore(startupTime))
+                .filter(entry -> entry.getValue().isError() || entry.getValue().unwrap().isBefore(startupTime))
                 .collect(Collectors.toList());
 
         // Prepare a list of emails with error messages
         var emailsWithParsingError = emailsToProcessNow.stream()
-                .filter(entry -> !entry.getValue().isPresent())
-                .map(entry -> Emails.createParsingErrorEmail(entry.getKey()))
+                .filter(entry -> entry.getValue().isError())
+                .map(entry -> Emails.createParsingErrorEmail(entry.getKey(), entry.getValue().unwrapError()))
                 .collect(Collectors.toList());
 
         // prepare a list of emails with reminders
         var emailsToRemind = emailsToProcessNow.stream()
-                .filter(entry -> entry.getValue().isPresent())
+                .filter(entry -> entry.getValue().isSuccess())
                 .map(entry -> Emails.createReminderEmail(entry.getKey()))
                 .collect(Collectors.toList());
 

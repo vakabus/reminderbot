@@ -1,27 +1,19 @@
 package cz.vakabus.reminderbot.comm;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.InstanceCreator;
 import com.joestelmach.natty.DateGroup;
 import com.joestelmach.natty.Parser;
-import com.sun.mail.imap.protocol.FLAGS;
 import cz.vakabus.reminderbot.storage.Configuration;
+import cz.vakabus.reminderbot.utils.Result;
 import jodd.mail.*;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
 
-import javax.activation.DataSource;
 import javax.mail.Flags;
-import javax.mail.Message;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.util.*;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -39,7 +31,10 @@ public class Emails {
                     "\n" +
                     "Hope I made it clear. Happy to serve you,\n" +
                     "Your ReminderBot\n" +
-                    "      More about me at [https://github.com/vakabus/reminderbot]";
+                    "      More about me at [https://github.com/vakabus/reminderbot]\n" +
+                    "\n" +
+                    "------------------------------------------------------------------------------\n" +
+                    "DETAILED REASON:\n";
 
     public static List<ReceivedEmail> downloadUnreadMessages() {
         LOGGER.info("Fetching emails...");
@@ -93,9 +88,9 @@ public class Emails {
         return gson.fromJson(string, ReceivedEmail.class);
     }
 
-    public static Optional<Instant> extractTime(ReceivedEmail receivedEmail) {
+    public static Result<Instant, String> extractTime(ReceivedEmail receivedEmail) {
         Parser nattyParser = new Parser(TimeZone.getDefault());
-        List<Date> dateList = receivedEmail.messages()
+        List<Result<Instant, String>> dateList = receivedEmail.messages()
                 .stream()
                 .map(emailMessage -> emailMessage.getContent().trim())
                 .filter(s -> !s.isEmpty())
@@ -103,15 +98,37 @@ public class Emails {
                 .map(txt -> Jsoup.clean(txt, Whitelist.none()))
                 .map(s -> nattyParser.parse(s, receivedEmail.sentDate()))
                 .flatMap(Collection::stream)
-                .filter(dateGroup -> (dateGroup.isDateInferred() || dateGroup.isTimeInferred()) && !dateGroup.isRecurring())
-                .filter(dateGroup -> dateGroup.getText().equals(dateGroup.getFullText()))
-                .flatMap(dateGroup -> dateGroup.getDates().stream())
+                .map((Function<DateGroup, Result<Instant, String>>) dateGroup -> {
+                    if (dateGroup.getText().equals(dateGroup.getFullText())) {
+                        if (dateGroup.isRecurring()) {
+                            return Result.error("Parsed date is recurring, that's not supported.");
+                        } else if (!dateGroup.isDateInferred() && !dateGroup.isTimeInferred()) {
+                            return Result.error("Date nor time were inferred from the specified text...");
+                        } else if (dateGroup.getDates().size() == 1) {
+                            return Result.success(dateGroup.getDates().get(0).toInstant());
+                        } else {
+                            return Result.error("From the supplied message, multiple dates were parsed. I'm not sure, which one is the correct one.");
+                        }
+                    } else {
+                        var formatter = new SimpleDateFormat("dd-M-yyyy HH:mm:ss");
+                        String msg = "\"" + dateGroup.getText() + "\" is the part of Your message that was understood. "
+                                + "I think it means all of these (might be empty):\n\n"
+                                + dateGroup.getDates().stream().map(formatter::format).map(s -> "* " + s).collect(Collectors.joining("\n"))
+                                + "\n\n";
+                        return Result.error(msg);
+                    }
+                })
                 .collect(Collectors.toList());
 
         if (dateList.size() == 1) {
-            return Optional.of(dateList.get(0).toInstant());
+            return dateList.get(0);
         } else {
-            return Optional.empty();
+            var nlist = dateList.stream().filter(Result::isSuccess).collect(Collectors.toList());
+            if (nlist.size() == 1) {
+                return nlist.get(0);
+            } else {
+                return Result.error("Ambiguous date specification. Found too many possible candidates. Here are their errors:" + dateList.stream().filter(Result::isError).map(Result::unwrapError).collect(Collectors.joining("\n\n--------\n\n")));
+            }
         }
     }
 
@@ -143,7 +160,7 @@ public class Emails {
     }
 
 
-    public static Email createParsingErrorEmail(ReceivedEmail receivedEmail) {
+    public static Email createParsingErrorEmail(ReceivedEmail receivedEmail, String errorMsg) {
         Configuration config = Configuration.getInstance();
 
         return Email.create()
@@ -153,7 +170,7 @@ public class Emails {
                 .subject(receivedEmail.subject(), receivedEmail.subjectEncoding())
                 .header("In-Reply-To", receivedEmail.messageId())
                 .header("References", receivedEmail.header("References") + "\r\n " + receivedEmail.messageId())
-                .textMessage(ERROR_MSG)
+                .textMessage(ERROR_MSG + errorMsg)
                 .message(receivedEmail.messages());
     }
 
