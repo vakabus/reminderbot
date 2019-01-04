@@ -102,8 +102,6 @@ public class Emails {
                     if (dateGroup.getText().equals(dateGroup.getFullText())) {
                         if (dateGroup.isRecurring()) {
                             return Result.error("Parsed date is recurring, that's not supported.");
-                        } else if (!dateGroup.isDateInferred() && !dateGroup.isTimeInferred()) {
-                            return Result.error("Date nor time were inferred from the specified text...");
                         } else if (dateGroup.getDates().size() == 1) {
                             return Result.success(dateGroup.getDates().get(0).toInstant());
                         } else {
