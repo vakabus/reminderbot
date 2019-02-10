@@ -9,6 +9,8 @@
 plugins {
     id("com.github.johnrengelman.shadow") version "4.0.3"
 
+    id("net.ltgt.apt") version "0.10"
+
     // Apply the java plugin to add support for Java
     java
 
@@ -20,9 +22,13 @@ repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    mavenCentral()
 }
 
 dependencies {
+    compileOnly("org.projectlombok:lombok:1.18.4")
+    apt("org.projectlombok:lombok:1.18.4")
+
     // This dependency is found on compile classpath of this component and consumers.
     //implementation("com.google.guava:guava:26.0-jre")
     implementation("com.google.code.gson:gson:2.8.5")

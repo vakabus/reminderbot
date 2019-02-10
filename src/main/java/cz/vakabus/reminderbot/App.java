@@ -3,14 +3,22 @@
  */
 package cz.vakabus.reminderbot;
 
-import cz.vakabus.reminderbot.comm.Emails;
-import cz.vakabus.reminderbot.storage.MessageStore;
+import cz.vakabus.reminderbot.endpoints.EndpointsManager;
+import cz.vakabus.reminderbot.endpoints.email.EmailEndpoint;
+import cz.vakabus.reminderbot.endpoints.email.EmailEndpointConfiguration;
+import cz.vakabus.reminderbot.model.Message;
+import cz.vakabus.reminderbot.endpoints.MessageEndpoint;
+import cz.vakabus.reminderbot.model.ParsedMessage;
+import cz.vakabus.reminderbot.utils.Json;
+import cz.vakabus.reminderbot.utils.Pair;
+import cz.vakabus.reminderbot.utils.Result;
+import lombok.extern.java.Log;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.AbstractMap;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Overview of functionality:
@@ -28,50 +36,76 @@ import java.util.stream.Collectors;
  *
  * In case of any error, bail out and stop the world. We might send a reminder twice, but must never loose one.
  */
+@Log
 public class App {
-    static Logger LOGGER = Logger.getLogger(App.class.getName());
     static Instant startupTime;
 
     public static void main(String[] args) throws IOException {
-        LOGGER.info("ReminderBot starting up...");
+        log.info("ReminderBot starting up...");
         startupTime = Instant.now();
 
-        var messageStore = MessageStore.load("messages.json");
-        var emails = Emails.downloadUnreadMessages();
+        log.info("Loading IdentityManager...");
+        IdentityManager idManager = new IdentityManager("registered_users.json");
+
+        log.info("Loading message endpoint configuration...");
+        var emailConfig = Json.<EmailEndpointConfiguration>load("config.json", EmailEndpointConfiguration.class);
+
+        log.info("Initializing message endpoints...");
+        EndpointsManager.getInstance().registerEndpoint(EmailEndpoint.connect(emailConfig));
+
+        log.info("Downloading messages from all endpoints (streaming download)...");
+        var messageStream = EndpointsManager.getInstance().downloadAllMessages();
 
 
-        // Fetch unread emails and filter those, which we will have to work with now
-        LOGGER.info("" + messageStore.getMessages().size() + " stored messages is in the system...");
-        var emailsToProcessNow = emails.stream()
-                .map(receivedEmail -> new AbstractMap.SimpleEntry<>(receivedEmail, Emails.extractTime(receivedEmail)))
-                .filter(entry -> entry.getValue().isError() || entry.getValue().unwrap().isBefore(startupTime))
-                .collect(Collectors.toList());
+        log.info("Parsing messages...");
+        var parser = new Parser();
+        Stream<Result<ParsedMessage, Pair<Message, String>>> parsingResultStream = messageStream.map(message -> {
+            var parserResult = parser.parseMessage(message, idManager);
+            if (parserResult.isSuccess()) {
+                return Result.success(parserResult.unwrap());
+            } else {
+                return Result.error(Pair.of(message, parserResult.unwrapError()));
+            }
+        });
 
-        // Prepare a list of emails with error messages
-        var emailsWithParsingError = emailsToProcessNow.stream()
-                .filter(entry -> entry.getValue().isError())
-                .map(entry -> Emails.createParsingErrorEmail(entry.getKey(), entry.getValue().unwrapError()))
-                .collect(Collectors.toList());
+        log.info("Handling parsing errors...");
+        var parsedMessageStream = parsingResultStream.flatMap(parsedMessagePairResult -> {
+            if (parsedMessagePairResult.isSuccess()) {
+                return Stream.of(parsedMessagePairResult.unwrap());
+            } else {
+                var error = parsedMessagePairResult.unwrapError();
+                error.getFirst().getSource().reportError(error.getFirst(), error.getSecond());
+                error.getFirst().getSource().markProcessed(error.getFirst());
+                return Stream.empty();
+            }
+        });
 
-        // prepare a list of emails with reminders
-        var emailsToRemind = emailsToProcessNow.stream()
-                .filter(entry -> entry.getValue().isSuccess())
-                .map(entry -> Emails.createReminderEmail(entry.getKey()))
-                .collect(Collectors.toList());
+        log.info("Handling unauthorised senders...");
+        parsedMessageStream = parsedMessageStream.flatMap(parsedMessage -> {
+            if (idManager.isKnown(parsedMessage.getMessage().getSender())) {
+                return Stream.of(parsedMessage);
+            } else {
+                var endpoint = parsedMessage.getMessage().getSource();
+                endpoint.reportError(parsedMessage.getMessage(), "Sorry, but You are unauthorised to use this service.");
+                endpoint.markProcessed(parsedMessage.getMessage());
+                return Stream.empty();
+            }
+        });
 
-        // Send it all
-        LOGGER.info("" + emailsToRemind.size() + " reminders will be send...");
-        Emails.sendEmails(emailsToRemind);
-        LOGGER.info("" + emailsWithParsingError.size() + " errors will be send...");
-        Emails.sendEmails(emailsWithParsingError);
 
-        // Mark processed emails as read
-        LOGGER.info("" + emailsToProcessNow.size() + " emails overall were removed from queue...");
-        Emails.markAsRead(emailsToProcessNow.stream().map(AbstractMap.SimpleEntry::getKey).collect(Collectors.toList()));
+        log.info("Sending reminders...");
+        parsedMessageStream.forEach(parsedMessage -> {
+            if (parsedMessage.getTime().isAfter(startupTime)) {
+                // future reminder, currently nothing to do
+                return;
+            }
 
-        messageStore.setLastSuccessfulRun(startupTime);
-        messageStore.storeMessages("messages.json");
+            //send reminder
+            var endpoint = parsedMessage.getSink();
+            endpoint.send(parsedMessage);
+            parsedMessage.getMessage().getSource().markProcessed(parsedMessage.getMessage());
+        });
 
-        LOGGER.info("ReminderBot terminating...");
+        log.info("ReminderBot terminating...");
     }
 }

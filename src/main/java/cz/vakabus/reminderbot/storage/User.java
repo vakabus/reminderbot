@@ -2,37 +2,41 @@ package cz.vakabus.reminderbot.storage;
 
 import com.google.gson.reflect.TypeToken;
 import cz.vakabus.reminderbot.utils.Json;
-import jodd.mail.EmailAddress;
+import lombok.SneakyThrows;
+import lombok.Value;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.*;
 
+@Value
 public class User {
     private static final Type USERS_TYPE = new TypeToken<List<User>>() {
     }.getType();
 
-    String name;
-    HashMap<CommunicationMethod, String> contactInfo;
+    @NotNull String name;
+    @NotNull Set<String> aliases;
+    @NotNull HashMap<String, Set<String>> contactInfo;
 
-    public static List<User> loadUsers(String filename) throws IOException {
+    public Optional<String> getContactId(String endpointName) {
+        if (contactInfo.containsKey(endpointName)) {
+            return Optional.of(contactInfo.get(endpointName).iterator().next());
+        } else {
+            return Optional.empty();
+        }
+    }
+
+
+    @NotNull
+    @SneakyThrows
+    public static List<User> loadUsers(@NotNull String filename) {
         return Json.load(filename, USERS_TYPE);
     }
 
-    public static void storeUsers(String filename, List<User> users) throws IOException {
+    public static void storeUsers(@NotNull String filename, List<User> users) throws IOException {
         Json.store(filename, users, USERS_TYPE);
     }
 
 
-    public static Predicate<EmailAddress> createEmailWhitelist(List<User> users) {
-        var emails = users.stream()
-                .filter(user -> user.contactInfo.containsKey(CommunicationMethod.MAIL))
-                .map(user -> user.contactInfo.get(CommunicationMethod.MAIL))
-                .collect(Collectors.toSet());
-
-        return emailAddress -> emails.contains(emailAddress.getEmail());
-    }
 }

@@ -1,23 +1,26 @@
 package cz.vakabus.reminderbot.utils;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.stream.Stream;
 
 public class Result<T,E> {
     private boolean isError;
-    private T success = null;
-    private E error = null;
+    private @Nullable T success = null;
+    private @Nullable E error = null;
 
-    private Result(T success, E error) {
+    private Result(@Nullable T success, E error) {
         this.success = success;
         this.error = error;
         isError = success == null;
     }
 
-    public static <T,E> Result<T,E> error(E error) {
+    public static <T,E> Result<T,E> error(@NotNull E error) {
         return new Result<>(null, error);
     }
 
-    public static <T,E> Result<T,E> success(T success) {
+    public static <T,E> Result<T,E> success(@NotNull T success) {
         return new Result<>(success, null);
     }
 
@@ -28,17 +31,20 @@ public class Result<T,E> {
         return !isError;
     }
 
-    public T expect(String errMsg) {
+    @Nullable
+    public T expect(@NotNull String errMsg) {
         if (isError)
             throw new ResultAccessException(errMsg, error);
 
         return success;
     }
 
+    @NotNull
     public T unwrap() {
         return this.expect("Accessed Result containing error!");
     }
 
+    @NotNull
     public E expectError(String errMsg) {
         if (!isError)
             throw new ResultAccessException(errMsg, error);
@@ -46,10 +52,12 @@ public class Result<T,E> {
         return error;
     }
 
+    @NotNull
     public E unwrapError() {
         return this.expectError("Accessed error of Result containing success!");
     }
 
+    @NotNull
     public Stream<T> stream() {
         if (isError)
             return Stream.empty();

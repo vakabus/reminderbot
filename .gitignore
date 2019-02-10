@@ -7,4 +7,4 @@ build
 out/
 
 config.json
-messages.json
+registered_users.json
