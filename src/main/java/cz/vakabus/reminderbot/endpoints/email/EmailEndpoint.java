@@ -101,14 +101,15 @@ public class EmailEndpoint implements MessageEndpoint {
                 .from(displayName, emailAddress)
                 .currentSentDate()
                 .subject("Reminder")
-                .textMessage("I should have reminded you about this...\n\nYour ReminderBot\n-------------------\n")
-                .textMessage(message.getMessage().getContent());
+                .textMessage("I was told to remind you about \"" + message.getRemindedObject() + "\"...\n\nYour ReminderBot\n\n" + quote(message.getMessage()));
 
         // add reference
         if (message.getMessage() instanceof EmailMessage) {
+            var rcvdEmail = ((EmailMessage) message.getMessage()).email;
             email = email
-                    .header("In-Reply-To", ((EmailMessage) message.getMessage()).email.messageId())
-                    .header("References", ((EmailMessage) message.getMessage()).email.header("References") + "\r\n " + ((EmailMessage) message.getMessage()).email.messageId());
+                    .header("In-Reply-To", rcvdEmail.messageId())
+                    .header("References", rcvdEmail.header("References") + "\r\n " + rcvdEmail.messageId())
+                    .subject(rcvdEmail.subject(), rcvdEmail.subjectEncoding());
         }
 
         log.info("Sending emails...");
@@ -123,8 +124,7 @@ public class EmailEndpoint implements MessageEndpoint {
             "Sorry, Your reminder was not set. The REASON is:\n" +
                     "{reason}\n" +
                     "\n" +
-                    "\n" +
-                    "If you don't understand this message, please look at my GitHub\n" +
+                    "If you require more detailed explanation, please have a look at my GitHub\n" +
                     "profile at [https://github.com/vakabus/reminderbot]\n" +
                     "\n" +
                     "I hope, I will be more useful next time.\n" +

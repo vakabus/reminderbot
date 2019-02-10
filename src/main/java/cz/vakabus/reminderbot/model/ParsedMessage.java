@@ -13,6 +13,7 @@ public class ParsedMessage {
     @NotNull Instant time;
 
     @NotNull Identity deliverTo;
+    @NotNull String remindedObject;
 
     @NotNull MessageEndpoint sink;
 }

@@ -61,20 +61,18 @@ public class Parser {
             identityTokens.add(token);
         }
 
-        // then all non filler is [about]
+        // then all everything else is [about]
         var about = new ArrayList<String>();
-        while (commandWithoutDateTokenizer.hasMoreTokens()) {
-            String token = commandWithoutDateTokenizer.nextToken();
-            if (FILLER_WORDS.contains(token))
-                continue;
-            about.add(token);
-        }
+        while (commandWithoutDateTokenizer.hasMoreTokens())
+            about.add(commandWithoutDateTokenizer.nextToken());
+        String aboutText = about.isEmpty() ? "something" : String.join(" ", about);
+
 
         val iden = identityManager.parseIdentityTokens(message, identityTokens);
         if (iden.isError())
             return Result.error(iden.unwrapError());
 
         val endpoint = EndpointsManager.getInstance().getEndpointBy(iden.unwrap().getEndpointName());
-        return Result.success(new ParsedMessage(message, instant, iden.unwrap(), endpoint.orElseThrow()));
+        return Result.success(new ParsedMessage(message, instant, iden.unwrap(), aboutText, endpoint.orElseThrow()));
     }
 }

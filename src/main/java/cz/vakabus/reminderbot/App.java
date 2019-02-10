@@ -86,7 +86,7 @@ public class App {
                 return Stream.of(parsedMessage);
             } else {
                 var endpoint = parsedMessage.getMessage().getSource();
-                endpoint.reportError(parsedMessage.getMessage(), "Sorry, but You are unauthorised to use this service.");
+                endpoint.reportError(parsedMessage.getMessage(), "You are unauthorised to use this service.");
                 endpoint.markProcessed(parsedMessage.getMessage());
                 return Stream.empty();
             }
