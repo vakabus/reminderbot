@@ -12,7 +12,7 @@ plugins {
     id("net.ltgt.apt") version "0.10"
 
     id("io.franzbecker.gradle-lombok") version "2.0"
-
+    
     // Apply the java plugin to add support for Java
     java
 
