@@ -7,8 +7,9 @@ WORKDIR /
 
 CMD git clone https://github.com/vakabus/reminderbot.git;\
     cd /reminderbot;\
+    ./gradlew --no-daemon shadowJar;\
     while true; do\
-         ./gradlew run;\
-          echo "Sleeping for 300sec before next run...";\
-          sleep 300;\
+         java -jar build/libs/reminderbot.jar;\
+         echo "Sleeping for 300sec before next run...";\
+         sleep 300;\
      done
