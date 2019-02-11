@@ -1,18 +1,17 @@
 package cz.vakabus.reminderbot.endpoints.email;
 
-import cz.vakabus.reminderbot.model.Message;
 import cz.vakabus.reminderbot.endpoints.MessageEndpoint;
+import cz.vakabus.reminderbot.model.Message;
 import cz.vakabus.reminderbot.model.ParsedMessage;
 import jodd.mail.*;
+import lombok.NonNull;
 import lombok.extern.java.Log;
 import lombok.val;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.mail.Flags;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,13 +45,13 @@ public class EmailEndpoint implements MessageEndpoint {
         this.displayName = displayName;
     }
 
-    @Nullable ReceiveMailSession receiveMailSession = null;
-    @Nullable SendMailSession sendMailSession = null;
+    ReceiveMailSession receiveMailSession = null;
+    SendMailSession sendMailSession = null;
     String emailAddress;
     String displayName;
 
 
-    @NotNull
+    @NonNull
     @Override
     public String getName() {
         return NAME;
@@ -93,7 +92,7 @@ public class EmailEndpoint implements MessageEndpoint {
     }
 
     @Override
-    public void send(@NotNull ParsedMessage message) {
+    public void send(@NonNull ParsedMessage message) {
         assert message.getDeliverTo().getEndpointName().equals(this.getName());
 
         var email = Email.create()
@@ -138,7 +137,7 @@ public class EmailEndpoint implements MessageEndpoint {
     }
 
     @Override
-    public void reportError(@NotNull Message msg, @NotNull String error) {
+    public void reportError(@NonNull Message msg, @NonNull String error) {
         if (!(msg.getSender().getEndpointName().equals(getName())))
             throw new UnsupportedOperationException("Can't send message to unrelated message endpoints. This is JUST an email endpoint. Nothing more.");
 

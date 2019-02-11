@@ -5,9 +5,8 @@ import cz.vakabus.reminderbot.model.Identity;
 import cz.vakabus.reminderbot.model.Message;
 import cz.vakabus.reminderbot.storage.User;
 import cz.vakabus.reminderbot.utils.Result;
+import lombok.NonNull;
 import lombok.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +15,6 @@ import java.util.Set;
 public class IdentityManager {
 
     List<User> users;
-    @Nullable
     transient HashMap<String, User> userMapping = null;
 
     private void rebuildCache() {
@@ -40,16 +38,16 @@ public class IdentityManager {
         }
     }
 
-    public IdentityManager(@NotNull String filename) {
+    public IdentityManager(@NonNull String filename) {
         this.users = User.loadUsers(filename);
         rebuildCache();
     }
 
-    boolean isKnown(@NotNull Identity identity) {
+    boolean isKnown(@NonNull Identity identity) {
         return userMapping.containsKey(identity.getId());
     }
 
-    @NotNull Result<Identity, String> parseIdentityTokens(@NotNull Message msg, @NotNull List<String> identityTokens) {
+    @NonNull Result<Identity, String> parseIdentityTokens(@NonNull Message msg, @NonNull List<String> identityTokens) {
         if (identityTokens.isEmpty())
             return Result.success(msg.getSender());
 
@@ -93,7 +91,7 @@ public class IdentityManager {
 
     @Value
     private static class ParsedIdentity implements Identity {
-        @NotNull String id;
-        @NotNull String endpointName;
+        @NonNull String id;
+        @NonNull String endpointName;
     }
 }

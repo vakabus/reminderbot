@@ -7,7 +7,6 @@ import cz.vakabus.reminderbot.endpoints.EndpointsManager;
 import cz.vakabus.reminderbot.endpoints.email.EmailEndpoint;
 import cz.vakabus.reminderbot.endpoints.email.EmailEndpointConfiguration;
 import cz.vakabus.reminderbot.model.Message;
-import cz.vakabus.reminderbot.endpoints.MessageEndpoint;
 import cz.vakabus.reminderbot.model.ParsedMessage;
 import cz.vakabus.reminderbot.utils.Json;
 import cz.vakabus.reminderbot.utils.Pair;
@@ -16,8 +15,6 @@ import lombok.extern.java.Log;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Stream;
 
 /**

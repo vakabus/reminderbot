@@ -1,20 +1,22 @@
 package cz.vakabus.reminderbot;
 
 import cz.vakabus.reminderbot.endpoints.EndpointsManager;
-import cz.vakabus.reminderbot.model.Identity;
 import cz.vakabus.reminderbot.model.Message;
 import cz.vakabus.reminderbot.model.ParsedMessage;
 import cz.vakabus.reminderbot.utils.Result;
+import lombok.NonNull;
 import lombok.val;
-import org.jetbrains.annotations.NotNull;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.StringTokenizer;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Parser {
-    @NotNull
+    @NonNull
     private static final HashSet<String> FILLER_WORDS;
 
     static {
@@ -23,7 +25,7 @@ public class Parser {
     }
 
 
-    @NotNull Result<ParsedMessage, String> parseMessage(@NotNull Message message, @NotNull final IdentityManager identityManager) {
+    @NonNull Result<ParsedMessage, String> parseMessage(@NonNull Message message, @NonNull final IdentityManager identityManager) {
         val command = message.getCommand().strip();
         val nattyParser = new com.joestelmach.natty.Parser(TimeZone.getDefault());
         val formatter = new SimpleDateFormat("dd-M-yyyy HH:mm:ss");

@@ -2,12 +2,12 @@ package cz.vakabus.reminderbot.endpoints;
 
 import cz.vakabus.reminderbot.model.Message;
 import cz.vakabus.reminderbot.model.ParsedMessage;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 
 import java.util.stream.Stream;
 
 public interface MessageEndpoint {
-    @NotNull String getName();
+    @NonNull String getName();
     Stream<Message> receive();
     void markProcessed(Message message);
     void send(ParsedMessage message);

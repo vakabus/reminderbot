@@ -1,22 +1,22 @@
 package cz.vakabus.reminderbot.endpoints.email;
 
+import lombok.NonNull;
 import lombok.Value;
-import org.jetbrains.annotations.NotNull;
 
 @Value
 public class EmailEndpointConfiguration {
-    @NotNull String smtpServerHostname;
+    @NonNull String smtpServerHostname;
     int smtpServerPort;
     boolean smtpSSL;
-    @NotNull String smtpUsername;
-    @NotNull String smtpPassword;
+    @NonNull String smtpUsername;
+    @NonNull String smtpPassword;
 
-    @NotNull String imapServerHostname;
+    @NonNull String imapServerHostname;
     int imapServerPort;
     boolean imapSSL;
-    @NotNull String imapUsername;
-    @NotNull String imapPassword;
+    @NonNull String imapUsername;
+    @NonNull String imapPassword;
 
-    @NotNull String emailDisplayName;
-    @NotNull String emailAddress;
+    @NonNull String emailDisplayName;
+    @NonNull String emailAddress;
 }

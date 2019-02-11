@@ -4,7 +4,7 @@ import cz.vakabus.reminderbot.model.Identity;
 import cz.vakabus.reminderbot.model.Message;
 import cz.vakabus.reminderbot.endpoints.MessageEndpoint;
 import jodd.mail.ReceivedEmail;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -12,10 +12,10 @@ import java.util.stream.Collectors;
 
 public class EmailMessage implements Message {
 
-    @NotNull ReceivedEmail email;
-    @NotNull EmailEndpoint endpoint;
+    @NonNull ReceivedEmail email;
+    @NonNull EmailEndpoint endpoint;
 
-    public EmailMessage(@NotNull ReceivedEmail re, @NotNull EmailEndpoint endpoint) {
+    public EmailMessage(@NonNull ReceivedEmail re, @NonNull EmailEndpoint endpoint) {
         this.email = re;
         this.endpoint = endpoint;
     }
@@ -42,13 +42,13 @@ public class EmailMessage implements Message {
         return Arrays.stream(getEmailText().split("\n")).skip(1).collect(Collectors.joining("\n"));
     }
 
-    @NotNull
+    @NonNull
     @Override
     public MessageEndpoint getSource() {
         return endpoint;
     }
 
-    @NotNull
+    @NonNull
     @Override
     public Identity getSender() {
         return new EmailIdentity(email.from());

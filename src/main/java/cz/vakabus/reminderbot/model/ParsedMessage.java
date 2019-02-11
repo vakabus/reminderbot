@@ -1,19 +1,19 @@
 package cz.vakabus.reminderbot.model;
 
 import cz.vakabus.reminderbot.endpoints.MessageEndpoint;
+import lombok.NonNull;
 import lombok.Value;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 
 @Value
 public class ParsedMessage {
 
-    @NotNull Message message;
-    @NotNull Instant time;
+    @NonNull Message message;
+    @NonNull Instant time;
 
-    @NotNull Identity deliverTo;
-    @NotNull String remindedObject;
+    @NonNull Identity deliverTo;
+    @NonNull String remindedObject;
 
-    @NotNull MessageEndpoint sink;
+    @NonNull MessageEndpoint sink;
 }

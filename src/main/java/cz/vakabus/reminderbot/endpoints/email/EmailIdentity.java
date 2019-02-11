@@ -2,15 +2,15 @@ package cz.vakabus.reminderbot.endpoints.email;
 
 import cz.vakabus.reminderbot.model.Identity;
 import jodd.mail.EmailAddress;
+import lombok.NonNull;
 import lombok.Value;
-import org.jetbrains.annotations.NotNull;
 
 @Value
 public class EmailIdentity implements Identity {
 
-    @NotNull  EmailAddress emailAddress;
+    @NonNull  EmailAddress emailAddress;
 
-    @NotNull
+    @NonNull
     @Override
     public String getEndpointName() {
         return EmailEndpoint.NAME;
