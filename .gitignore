@@ -5,7 +5,6 @@
 build
 .idea/
 out/
-gradle/
 
 config.json
 registered_users.json
