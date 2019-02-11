@@ -15,6 +15,7 @@ import lombok.extern.java.Log;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
@@ -50,26 +51,27 @@ public class App {
         log.info("Initializing message endpoints...");
         EndpointsManager.getInstance().registerEndpoint(EmailEndpoint.connect(emailConfig));
 
-        log.info("Downloading messages from all endpoints (streaming download)...");
+        log.info("Starting message processing...");
         var messageStream = EndpointsManager.getInstance().downloadAllMessages();
 
-
-        log.info("Parsing messages...");
         var parser = new Parser();
         Stream<Result<ParsedMessage, Pair<Message, String>>> parsingResultStream = messageStream.map(message -> {
+            log.fine("Parsing message...");
             var parserResult = parser.parseMessage(message, idManager);
             if (parserResult.isSuccess()) {
+                log.info("OK - Message parsed successfully...");
                 return Result.success(parserResult.unwrap());
             } else {
+                log.info("ERR - Failed to parse message...");
                 return Result.error(Pair.of(message, parserResult.unwrapError()));
             }
         });
 
-        log.info("Handling parsing errors...");
         var parsedMessageStream = parsingResultStream.flatMap(parsedMessagePairResult -> {
             if (parsedMessagePairResult.isSuccess()) {
                 return Stream.of(parsedMessagePairResult.unwrap());
             } else {
+                log.info("ERR - Sending error report back...");
                 var error = parsedMessagePairResult.unwrapError();
                 error.getFirst().getSource().reportError(error.getFirst(), error.getSecond());
                 error.getFirst().getSource().markProcessed(error.getFirst());
@@ -77,11 +79,13 @@ public class App {
             }
         });
 
-        log.info("Handling unauthorised senders...");
         parsedMessageStream = parsedMessageStream.flatMap(parsedMessage -> {
+            log.fine("Checking sender authorization....");
             if (idManager.isKnown(parsedMessage.getMessage().getSender())) {
+                log.info("OK - Sender is authorised to use this service...");
                 return Stream.of(parsedMessage);
             } else {
+                log.info("ERR - Sender is NOT authorised to use this service...");
                 var endpoint = parsedMessage.getMessage().getSource();
                 endpoint.reportError(parsedMessage.getMessage(), "You are unauthorised to use this service.");
                 endpoint.markProcessed(parsedMessage.getMessage());
@@ -90,14 +94,15 @@ public class App {
         });
 
 
-        log.info("Sending reminders...");
         parsedMessageStream.forEach(parsedMessage -> {
             if (parsedMessage.getTime().isAfter(startupTime)) {
                 // future reminder, currently nothing to do
+                log.info("OK - Reminder is still in future. Doing nothing.");
                 return;
             }
 
             //send reminder
+            log.info("OK - Sending reminder...");
             var endpoint = parsedMessage.getSink();
             endpoint.send(parsedMessage);
             parsedMessage.getMessage().getSource().markProcessed(parsedMessage.getMessage());

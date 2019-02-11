@@ -22,12 +22,9 @@ public class EndpointsManager {
 
     @NonNull
     private HashMap<String, MessageEndpoint> endpointsByName = new HashMap<>();
-    @NonNull
-    private HashMap<Class<? extends MessageEndpoint>, MessageEndpoint> endpointsByClass = new HashMap<>();
 
     public void registerEndpoint(@NonNull MessageEndpoint endpoint) {
         endpointsByName.put(endpoint.getName(), endpoint);
-        endpointsByClass.put(endpoint.getClass(), endpoint);
     }
 
     @NonNull
@@ -38,13 +35,6 @@ public class EndpointsManager {
     public Optional<MessageEndpoint> getEndpointBy(String name) {
         if (endpointsByName.containsKey(name))
             return Optional.of(endpointsByName.get(name));
-        else
-            return Optional.empty();
-    }
-
-    public Optional<MessageEndpoint> getEndpointBy(Class<? extends MessageEndpoint> clazz) {
-        if (endpointsByClass.containsKey(clazz))
-            return Optional.of(endpointsByClass.get(clazz));
         else
             return Optional.empty();
     }
