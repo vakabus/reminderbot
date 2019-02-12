@@ -9,7 +9,7 @@ CMD cd /;\
     git clone https://github.com/vakabus/reminderbot.git;\
     cd /reminderbot;\
     ./gradlew --no-daemon shadowJar;\
-    cd;\
+    cd /data;\
     while true; do\
          java -jar /reminderbot/build/libs/reminderbot.jar;\
          echo "Sleeping for 300sec before next run...";\
