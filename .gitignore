@@ -6,5 +6,5 @@ build
 .idea/
 out/
 
-config.json
+endpoints/
 registered_users.json

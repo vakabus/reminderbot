@@ -2,14 +2,16 @@ FROM openjdk:11-slim
 
 RUN apt-get update && apt-get install -y git
 
-RUN mkdir /app
-WORKDIR /
+RUN mkdir /data
+WORKDIR /data
 
-CMD git clone https://github.com/vakabus/reminderbot.git;\
+CMD cd /;\
+    git clone https://github.com/vakabus/reminderbot.git;\
     cd /reminderbot;\
     ./gradlew --no-daemon shadowJar;\
+    cd;\
     while true; do\
-         java -jar build/libs/reminderbot.jar;\
+         java -jar /reminderbot/build/libs/reminderbot.jar;\
          echo "Sleeping for 300sec before next run...";\
          sleep 300;\
      done
