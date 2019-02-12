@@ -46,7 +46,7 @@ public class App {
         IdentityManager idManager = new IdentityManager("registered_users.json");
 
         log.info("Loading message endpoint configuration...");
-        var emailConfig = Json.<EmailEndpointConfiguration>load("endpoints/mail.json", EmailEndpointConfiguration.class);
+        var emailConfig = EmailEndpointConfiguration.loadConfiguration();
 
         log.info("Initializing message endpoints...");
         EndpointsManager.getInstance().registerEndpoint(EmailEndpoint.connect(emailConfig));

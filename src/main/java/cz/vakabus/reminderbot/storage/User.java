@@ -32,9 +32,12 @@ public class User {
 
 
     @NonNull
-    @SneakyThrows
     public static List<User> loadUsers(@NonNull String filename) {
-        return Json.load(filename, USERS_TYPE);
+        try {
+            return Json.load(filename, USERS_TYPE);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to parse registered_users.json, file might be missing or syntax might not be valid.");
+        }
     }
 
     public static void storeUsers(@NonNull String filename, List<User> users) throws IOException {

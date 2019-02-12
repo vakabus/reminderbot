@@ -18,7 +18,11 @@ public class Json {
     public static <T> T load(@NonNull String filename, @NonNull Type type) throws IOException {
         Gson gson = new Gson();
         try (JsonReader jsonReader = new JsonReader(new FileReader(new File(filename)))) {
-            return (T) gson.fromJson(jsonReader, type);
+            var r = (T) gson.fromJson(jsonReader, type);
+            if (r == null) {
+                throw new IOException("Could NOT parse JSON. Probably invalid syntax.");
+            }
+            return r;
         }
     }
 
