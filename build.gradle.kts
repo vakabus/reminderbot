@@ -48,8 +48,18 @@ application {
 task("deploy") {
     doLast {
         exec {
-            workingDir('.')
-            commandLine("ssh", "tukan", "docker restart reminderbot")
+            val cmd = mutableListOf("ssh", "tukan", "docker restart reminderbot")
+            val ssh = ProcessBuilder(cmd)
+                    .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                    .redirectInput(ProcessBuilder.Redirect.INHERIT)
+                    .redirectError(ProcessBuilder.Redirect.INHERIT)
+                    .start()
+
+            ssh.waitFor()
+
+            if (0 != ssh.exitValue()) {
+                throw RuntimeException("ssh exited with status: ${ssh.exitValue()}")
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ RUN mkdir /data
 WORKDIR /data
 
 CMD cd /;\
+    rm -rf /reminderbot;\
     git clone https://github.com/vakabus/reminderbot.git;\
     cd /reminderbot;\
     ./gradlew --no-daemon shadowJar;\
