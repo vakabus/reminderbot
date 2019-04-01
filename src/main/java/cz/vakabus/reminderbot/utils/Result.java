@@ -4,7 +4,20 @@ import lombok.NonNull;
 
 import java.util.stream.Stream;
 
-public class Result<T,E> {
+/**
+ * Generic result type as in more functional languages. Contains success value xor an error value. Forces you to check,
+ * because there's no other way to get to those values. It's also more explicit than checked exceptions.
+ * <p>
+ * <b>Invariants:</b><br/>
+ * It's NOT ok for a success value or an error value to be null.
+ *
+ *
+ * @see <a href="https://doc.rust-lang.org/std/result/">Result type in Rust</a>
+ *
+ * @param <T> success type
+ * @param <E> error type
+ */
+public final class Result<T,E> {
     private boolean isError;
     private T success = null;
     private E error = null;

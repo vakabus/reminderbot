@@ -51,7 +51,7 @@ docker run -d -v {PATH_TO_PERSISTENT_DATA}:/data --restart=always reminderbot:la
 ``` 
 
 To update the container, it should be sufficient to restart it, because on every start it fetches new code and rebuilds itself.
-This is not a good way how to design Docker containers, but it works for me good enough and it means rapid development is possible.
+This is not a good way how to design Docker containers, but it works for me well enough and it means rapid development is possible.
 
 ## Configuration and data
 

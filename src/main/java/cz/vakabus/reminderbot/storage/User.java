@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Value
-public class User {
+public final class User {
     private static final Type USERS_TYPE = new TypeToken<List<User>>() {
     }.getType();
 

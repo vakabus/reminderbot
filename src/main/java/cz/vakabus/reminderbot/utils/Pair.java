@@ -4,7 +4,7 @@ import lombok.NonNull;
 import lombok.Value;
 
 @Value
-public class Pair<E, F> {
+public final class Pair<E, F> {
     @NonNull E first;
     @NonNull F second;
 

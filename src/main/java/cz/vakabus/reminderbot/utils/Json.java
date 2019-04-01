@@ -11,7 +11,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-public class Json {
+public final class Json {
 
     @NonNull
     @SuppressWarnings("unchecked")
