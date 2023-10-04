@@ -8,7 +8,7 @@ import lombok.NonNull;
 import lombok.extern.java.Log;
 import lombok.val;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
